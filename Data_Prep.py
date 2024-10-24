@@ -1,27 +1,44 @@
+import pandas as pd
+import re
+import io
+import numpy as np 
 
-#Prepare data for FFSD data set 
-def base_load_data(args: dict):
-    # load S-FFSD dataset for base models
-    data_path = "data/S-FFSD.csv"
-    feat_df = pd.read_csv(data_path)
-    train_size = 1 - args['test_size']
-    method = args['method']
-    # for ICONIP16 & AAAI20
-    if args['method'] == 'stan':
-        if os.path.exists("data/tel_3d.npy"):
-            return
-        features, labels = span_data_3d(feat_df)
-    else:
-        if os.path.exists("data/tel_2d.npy"):
-            return
-        features, labels = span_data_2d(feat_df)
-    num_trans = len(feat_df)
-    trf, tef, trl, tel = train_test_split(
-        features, labels, train_size=train_size, stratify=labels, shuffle=True)
-    trf_file, tef_file, trl_file, tel_file = args['trainfeature'], args[
-        'testfeature'], args['trainlabel'], args['testlabel']
-    np.save(trf_file, trf)
-    np.save(tef_file, tef)
-    np.save(trl_file, trl)
-    np.save(tel_file, tel)
-    return
+
+#Read and open files 
+#Finanicial Fraud Semi-Supervised Dataset Week4
+SFFSD_path= "C:/Users/Raed Karkoub/Desktop/DS340/Data/S-FFSD_p3.csv"
+#Credit Card Dataset Week5
+CCD_path= "C:/Users/Raed Karkoub/Desktop/DS340/Data/creditcard_p3.csv"
+
+def clean_data(file_path: str) -> io.StringIO:
+    data = []
+    headers = []
+    with open(file_path) as fh:
+        data = fh.readlines()
+        headers = data.pop(0)
+        
+        #remove empty line
+        data = [item for item in data if item != "\n"]
+        
+        # remove [, ], and ; from data
+        data = [re.sub(r'[\[\];]', "", item) for item in data]
+        
+        # remove leading white space
+        data = [item.lstrip() for item in data]
+        
+        # replace unequal whitespace with ,
+        data = [','.join(item.split()) + "\n" for item in data]
+
+    data_str = "".join(data)
+    return io.StringIO(data_str)
+
+#create the dataframes
+SSFSD_clean = clean_data(SFFSD_path)
+SSFSD_df= pd.read_csv(SSFSD_clean, names=["Time", "Source", "Target", "Amount", "Location", "Type", "Labels"])
+
+CCD_clean = clean_data(CCD_path)
+CCD_df= pd.read_csv(CCD_clean, names=["Time", "V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8", "V9", "V10", "V11", "V12", "V13", "V14", "V15", "V16", "V17", "V18", "V19", "V20", "V21", "V22", "V23", "V24", "V25", "V26","V27", "V28", "Amount", "Class"])
+print(SSFSD_df.head())
+print(CCD_df.head())
+
+
